@@ -1,0 +1,89 @@
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
+def analyze_sentiment(text):
+    """
+    Analyzes the sentiment of the given text using VADER.
+
+    Args:
+        text (str): The text to analyze.
+
+    Returns:
+        dict: A dictionary containing the sentiment scores (positive, negative, neutral, compound).
+              Returns None if an error occurs.
+    """
+    try:
+        # Create a SentimentIntensityAnalyzer object.
+        analyzer = SentimentIntensityAnalyzer()
+
+        # Get the sentiment scores for the text.
+        vs = analyzer.polarity_scores(text)
+
+        return vs  # Return the sentiment scores
+
+    except Exception as e:
+        print(f"Error analyzing sentiment: {e}")
+        return None # Explicitly return None in case of an error
+
+def get_emotion_from_sentiment(sentiment_scores):
+    """
+    Classifies the emotion based on the compound sentiment score.
+
+    Args:
+        sentiment_scores (dict): A dictionary of sentiment scores
+                                 (e.g., from analyze_sentiment).
+
+    Returns:
+        str: The predicted emotion ("positive", "negative", "neutral", or "very positive", "very negative").
+             Returns "unknown" if sentiment_scores is None or an error occurs.
+    """
+    if sentiment_scores is None:
+        return "unknown"
+
+    compound_score = sentiment_scores['compound']
+
+    if compound_score >= 0.5:
+        return "very positive"
+    elif compound_score > 0.1:
+        return "positive"
+    elif compound_score <= -0.5:
+        return "very negative"
+    elif compound_score < -0.1:
+        return "negative"
+    else:
+        return "neutral"
+
+def main():
+    """
+    Main function to run the sentiment analysis and emotion detection.
+    """
+    # Download the VADER lexicon (only needs to be done once).  Added check.
+    try:
+        nltk.data.find('vader_lexicon')
+    except LookupError:
+        print("Downloading VADER lexicon...")
+        nltk.download('vader_lexicon')
+
+    # Test cases.
+    test_texts = [
+        "I love this! It's amazing!",
+        "This is terrible. I hate it.",
+        "It's okay, I guess.",
+        "The weather is nice today.",
+        "I am so incredibly happy and excited!!!",
+        "I'm feeling really down and depressed :(",
+        "" #edge case
+    ]
+
+    for text in test_texts:
+        print(f"\nText: \"{text}\"")
+        sentiment_scores = analyze_sentiment(text)
+        if sentiment_scores: #check if sentiment_scores is not None
+            print(f"Sentiment Scores: {sentiment_scores}")
+            emotion = get_emotion_from_sentiment(sentiment_scores)
+            print(f"Predicted Emotion: {emotion}")
+        else:
+            print("Could not analyze sentiment.")
+
+if __name__ == "__main__":
+    main()
